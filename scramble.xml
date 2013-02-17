@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="scramble" default="all">
+  
+  
+  <property file="scramble.properties"/>
+  <!-- Uncomment the following property if no tests compilation is needed -->
+  <!-- 
+  <property name="skip.tests" value="true"/>
+   -->
+  
+  <!-- Compiler options -->
+  
+  <property name="compiler.debug" value="on"/>
+  <property name="compiler.generate.no.warnings" value="off"/>
+  <property name="compiler.args" value=""/>
+  <property name="compiler.max.memory" value="128m"/>
+  <patternset id="ignored.files">
+    <exclude name="**/CVS/**"/>
+    <exclude name="**/SCCS/**"/>
+    <exclude name="**/RCS/**"/>
+    <exclude name="**/rcs/**"/>
+    <exclude name="**/.DS_Store/**"/>
+    <exclude name="**/.svn/**"/>
+    <exclude name="**/.pyc/**"/>
+    <exclude name="**/.pyo/**"/>
+    <exclude name="**/*.pyc/**"/>
+    <exclude name="**/*.pyo/**"/>
+    <exclude name="**/.git/**"/>
+    <exclude name="**/*.hprof/**"/>
+    <exclude name="**/_svn/**"/>
+    <exclude name="**/.hg/**"/>
+    <exclude name="**/*.lib/**"/>
+    <exclude name="**/*~/**"/>
+    <exclude name="**/__pycache__/**"/>
+    <exclude name="**/.bundle/**"/>
+    <exclude name="**/*.rbc/**"/>
+  </patternset>
+  <patternset id="library.patterns">
+    <include name="*.zip"/>
+    <include name="*.apk"/>
+    <include name="*.war"/>
+    <include name="*.egg"/>
+    <include name="*.ear"/>
+    <include name="*.ane"/>
+    <include name="*.swc"/>
+    <include name="*.jar"/>
+  </patternset>
+  <patternset id="compiler.resources">
+    <include name="**/?*.properties"/>
+    <include name="**/?*.xml"/>
+    <include name="**/?*.gif"/>
+    <include name="**/?*.png"/>
+    <include name="**/?*.jpeg"/>
+    <include name="**/?*.jpg"/>
+    <include name="**/?*.html"/>
+    <include name="**/?*.dtd"/>
+    <include name="**/?*.tld"/>
+    <include name="**/?*.ftl"/>
+  </patternset>
+  
+  <!-- Modules -->
+  
+  
+  <!-- Module scramble -->
+  
+  <dirname property="module.scramble.basedir" file="${ant.file}"/>
+  
+  
+  
+  <property name="compiler.args.scramble" value="${compiler.args}"/>
+  
+  <property name="scramble.output.dir" value="${module.scramble.basedir}/out/production/scramble"/>
+  <property name="scramble.testoutput.dir" value="${module.scramble.basedir}/out/test/scramble"/>
+  
+  <path id="scramble.module.bootclasspath">
+    <!-- Paths to be included in compilation bootclasspath -->
+  </path>
+  
+  <path id="scramble.module.production.classpath"/>
+  
+  <path id="scramble.runtime.production.module.classpath">
+    <pathelement location="${scramble.output.dir}"/>
+  </path>
+  
+  <path id="scramble.module.classpath">
+    <pathelement location="${scramble.output.dir}"/>
+  </path>
+  
+  <path id="scramble.runtime.module.classpath">
+    <pathelement location="${scramble.testoutput.dir}"/>
+    <pathelement location="${scramble.output.dir}"/>
+  </path>
+  
+  
+  <patternset id="excluded.from.module.scramble">
+    <patternset refid="ignored.files"/>
+  </patternset>
+  
+  <patternset id="excluded.from.compilation.scramble">
+    <patternset refid="excluded.from.module.scramble"/>
+  </patternset>
+  
+  <path id="scramble.module.sourcepath">
+    <dirset dir="${module.scramble.basedir}">
+      <include name="src"/>
+    </dirset>
+  </path>
+  
+  
+  <target name="compile.module.scramble" depends="compile.module.scramble.production,compile.module.scramble.tests" description="Compile module scramble"/>
+  
+  <target name="compile.module.scramble.production" description="Compile module scramble; production classes">
+    <mkdir dir="${scramble.output.dir}"/>
+    <javac destdir="${scramble.output.dir}" debug="${compiler.debug}" nowarn="${compiler.generate.no.warnings}" memorymaximumsize="${compiler.max.memory}" fork="true">
+      <compilerarg line="${compiler.args.scramble}"/>
+      <bootclasspath refid="scramble.module.bootclasspath"/>
+      <classpath refid="scramble.module.production.classpath"/>
+      <src refid="scramble.module.sourcepath"/>
+      <patternset refid="excluded.from.compilation.scramble"/>
+    </javac>
+    
+    <copy todir="${scramble.output.dir}">
+      <fileset dir="${module.scramble.basedir}/src">
+        <patternset refid="compiler.resources"/>
+        <type type="file"/>
+      </fileset>
+    </copy>
+  </target>
+  
+  <target name="compile.module.scramble.tests" depends="compile.module.scramble.production" description="compile module scramble; test classes" unless="skip.tests">
+    <java classname="com.pac.scramble.Scramble$Test">
+      <classpath refid="scramble.runtime.production.module.classpath"/>
+    </java>
+  </target>
+  
+  <target name="clean.module.scramble" description="cleanup module">
+    <delete dir="${scramble.output.dir}"/>
+    <delete dir="${scramble.testoutput.dir}"/>
+  </target>
+  
+  <target name="init" description="Build initialization">
+    <!-- Perform any build initialization in this target -->
+  </target>
+  
+  <target name="clean" depends="clean.module.scramble" description="cleanup all"/>
+  
+  <target name="build.modules" depends="init, clean, compile.module.scramble" description="build all modules"/>
+  
+  <target name="all" depends="build.modules" description="build all"/>
+</project>
