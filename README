@@ -1,1 +1,6 @@
 Scramble solver project
+just playing around with some algorithms/data structures
+
+ant -f scramble.xml to build
+
+After that, you're on your own...
