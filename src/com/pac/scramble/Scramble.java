@@ -261,7 +261,7 @@ public class Scramble {
         }
     }
 
-    private static class Test {
+    public static class Test {
 
         private static int count = 0;
         private static int succeeded = 0;
