@@ -45,7 +45,11 @@ public class Scramble {
             file.close();
         }
 
+        Collections.sort(dictionary);
+
+        long now = System.currentTimeMillis();
         driver(theScramble);
+        long totalTime = System.currentTimeMillis() - now;
 
         Map<String, Integer> scores = new HashMap<String, Integer>();
         for (String s : strings) {
@@ -57,9 +61,10 @@ public class Scramble {
 
         sortedScores.putAll(scores);
         System.err.println("scores.size(): " + scores.size());
-        for (Map.Entry<String, Integer> entry : sortedScores.entrySet()) {
-            System.err.println(entry.getKey()+":"+entry.getValue());
-        }
+        System.err.println("time: " + totalTime);
+//        for (Map.Entry<String, Integer> entry : sortedScores.entrySet()) {
+//            System.err.println(entry.getKey() + ":" + entry.getValue());
+//        }
     }
 
     public static int scoreWord(String word) {
@@ -180,9 +185,9 @@ public class Scramble {
     public static boolean hasPrefix(String s) {
         // look up word in dictionary
         // add to words list
+        // TODO should probably also check to see if we've already found this word
 
-        // really sloppy performance-wise
-        if (dictionary.contains(s)) {
+        if (Collections.binarySearch(dictionary,s)>=0) {
             strings.add(s);
             return true;
         }
