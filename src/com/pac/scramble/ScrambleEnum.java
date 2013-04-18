@@ -19,9 +19,9 @@ public enum ScrambleEnum {
 
     public String toString() {
         String s = super.toString();
-//        if (s.equals("q")) {
-//            s += "qu";
-//        }
+        if (s.equals("q")) {
+            s += "qu";
+        }
         return s;
     }
 }

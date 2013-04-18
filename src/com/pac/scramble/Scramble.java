@@ -1,8 +1,5 @@
 package com.pac.scramble;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.*;
 
 /**
@@ -22,33 +19,17 @@ public class Scramble {
 
     private static Set<ScrambleCharacter> used = new HashSet<ScrambleCharacter>();
     private static Set<String> strings = new TreeSet<String>();
-    private static List<String> dictionary = new ArrayList<String>();
-    private static Comparator<String> beginsWithComparator = new BeginsWithComparator();
+
+    private final static PrefixDictionary dictionary = new SimplePrefixDictionary("./resources/words.txt");
+    private static int dupes = 0;
 
     public static void main(String[] args)
-    throws IOException {
+    throws Exception {
 
-        String fileName = args[0];
-
-        BufferedReader file = null;
-        try {
-            file = new BufferedReader(new FileReader(fileName));
-            String word = null;
-            while ((word = file.readLine()) != null) {
-                dictionary.add(word);
-            }
-        }
-        catch (IOException ioe) {
-            System.err.println("error reading file: " + fileName + ": " + ioe);
-        }
-        finally {
-            file.close();
-        }
-
-        Collections.sort(dictionary);
+        dictionary.init();
 
         long now = System.currentTimeMillis();
-        driver(theScramble);
+        findScrambleWords(theScramble);
         long totalTime = System.currentTimeMillis() - now;
 
         Map<String, Integer> scores = new HashMap<String, Integer>();
@@ -56,12 +37,14 @@ public class Scramble {
             int score = scoreWord(s);
             scores.put(s, score);
         }
+
         ValueComparator valueComparator = new ValueComparator(scores);
         Map<String, Integer> sortedScores = new TreeMap<String, Integer>(valueComparator);
 
         sortedScores.putAll(scores);
         System.err.println("scores.size(): " + scores.size());
         System.err.println("time: " + totalTime);
+        System.err.println("dupes: " + dupes);
 //        for (Map.Entry<String, Integer> entry : sortedScores.entrySet()) {
 //            System.err.println(entry.getKey() + ":" + entry.getValue());
 //        }
@@ -141,7 +124,7 @@ public class Scramble {
         }
     }
 
-    public static void driver(Character[][] scr) {
+    public static void findScrambleWords(Character[][] scr) {
         for (int i = 0; i < scr.length; i++) {
             for (int j = 0; j < scr[i].length; j++) {
                 used.clear();
@@ -151,6 +134,12 @@ public class Scramble {
 
     }
 
+    /**
+     * start at 0,0 and for each neighbor of that letter that hasn't already been used,
+     *   look up word in already found dictionary - continue if it's already there
+     *   then in word dictionary - add to found words if found
+     *   recurse
+     */
     private static void recurse(ScrambleCharacter scrambleCharacter, String s) {
 
         used.add(scrambleCharacter);
@@ -161,44 +150,24 @@ public class Scramble {
                 if (!used.contains(sc2)) {
                     // check if has prefix
                     String prefix = s + sc2.scrambleEnum;
-                    if(!hasPrefix(prefix)) {
-//                        System.err.println("couldn't find: " + prefix);
-                        continue;
-                    }
-                    else {
-//                        System.err.println("found: " + prefix);
+
+                    //
+                    // TODO: check here to see if we already found this word previously?
+                    //
+
+                    if (dictionary.hasPrefix(prefix)) {
+                        if (dictionary.hasWord(prefix)) {
+                            strings.add(prefix);
+                        }
                         recurse(sc2, prefix);
                     }
-                }
-                else {
-                    continue;
                 }
         }
         used.remove(scrambleCharacter);
 
-        // start at 0,0 and for each neighbor of that letter that hasn't already been used,
-        //  look up word in already found dictionary - continue if it's already there
-        //  then in word dictionary - add to found words if found
-        //  recurse  //
     }
 
-    public static boolean hasPrefix(String s) {
-        // look up word in dictionary
-        // add to words list
-        // TODO should probably also check to see if we've already found this word
-
-        if (Collections.binarySearch(dictionary,s)>=0) {
-            strings.add(s);
-            return true;
-        }
-        else if(Collections.binarySearch(dictionary, s, beginsWithComparator) >=0) {
-            return true;
-        }
-        else
-            return false;
-    }
-
-    public static Set<ScrambleCharacter> findUnusedNeighbors(ScrambleCharacter scrambleCharacter, Character [] [] sc) {
+    private static Set<ScrambleCharacter> findUnusedNeighbors(ScrambleCharacter scrambleCharacter, Character [] [] sc) {
         Set<ScrambleCharacter> a = new HashSet<ScrambleCharacter>();
         int row = scrambleCharacter.row;
         int col = scrambleCharacter.col;
@@ -228,6 +197,11 @@ public class Scramble {
         return a;
     }
 
+    /**
+     * represents a letter and location on the board of a scramble character
+     *
+     * TODO: need to support for word and letter multipliers
+     */
     private static class ScrambleCharacter {
         private int row;
         private int col;
