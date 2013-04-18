@@ -18,7 +18,7 @@ implements PrefixDictionary{
 
     private final PrefixComparator prefixComparator;
 
-    private String wordFile = null;
+    private final String wordFile;
 
     private List<String> dictionary = null;
 
