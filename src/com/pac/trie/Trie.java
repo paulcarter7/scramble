@@ -18,12 +18,10 @@ public class Trie {
         char[] letters = word.toCharArray();
         TrieNode current = root;
         for (int i = 0; i < letters.length; i++) {
-//System.err.println("current.nodes[letters[i]-OFFSET]: " + (letters[i]-OFFSET));
             if (current.nodes[letters[i] - OFFSET] == null) {
                 current.nodes[letters[i] - OFFSET] = new TrieNode((letters[i]));
             }
             current = current.nodes[letters[i] - OFFSET];
-//System.err.println("current: " + current);
         }
         current.isFullWord = true;
         return;
@@ -35,7 +33,11 @@ public class Trie {
 
     }
 
-    public TrieNode goToNode(String prefix) {
+    public boolean hasPrefix(String s) {
+        return goToNode(s) != null;
+    }
+
+    private TrieNode goToNode(String prefix) {
         TrieNode current = root;
 
         for (int i = 0; i < prefix.length(); i++) {
@@ -48,7 +50,7 @@ public class Trie {
 
     }
 
-    public List<String> findWordsWithPrefix(String prefix) {
+    private List<String> findWordsWithPrefix(String prefix) {
         TrieNode current = goToNode(prefix);
         List<String> words = new ArrayList<String>();
         recurseTrieNodes(prefix, words, current);
