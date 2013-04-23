@@ -117,19 +117,17 @@ public class Trie {
             assertTrue(!t.findWord("balls"), "should not find 'balls'");
 
             List<String> words = t.findWordsWithPrefix("bell");
-            System.err.println("words, prefix(bell): " + words);
+//            System.err.println("words, prefix(bell): " + words);
             assertTrue(words.size()==2, "size should be 2");
             assertTrue(words.contains("bells"), "prefix(bell): should contains 'bells'");
             assertTrue(words.contains("bell"), "prefix(bell): should contains 'bell'");
 
             words = t.findWordsWithPrefix("be");
-            System.err.println("words, prefix(be): " + words);
             assertTrue(words.size()==2, "size should be 2");
             assertTrue(words.contains("bells"), "prefix(be): should contains 'bells'");
             assertTrue(words.contains("bell"), "prefix(be): should contains 'bell'");
 
             words = t.findWordsWithPrefix(("b"));
-            System.err.println("words, prefix(b): " + words);
             assertTrue(words.size()==3, "size should be 3");
             assertTrue(words.contains("bells"), "prefix(b): should contains 'bells'");
             assertTrue(words.contains("bell"), "prefix(b): should contains 'bell'");
@@ -137,7 +135,7 @@ public class Trie {
 
             // should return all words
             words = t.findWordsWithPrefix("");
-            System.err.println("words: " + words);
+//            System.err.println("words: " + words);
             assertTrue(words.size() == 3, "all: size should be 3");
 
             summary();

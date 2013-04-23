@@ -16,7 +16,7 @@ import java.util.*;
 public class SimplePrefixDictionary
 implements PrefixDictionary{
 
-    private final PrefixComparator prefixComparator;
+    private final Comparator<String> prefixComparator;
 
     private final String wordFile;
 

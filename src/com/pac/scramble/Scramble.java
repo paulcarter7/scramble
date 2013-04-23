@@ -317,7 +317,7 @@ public class Scramble {
             d = new ScrambleCharacter('a', 1, 0);
             assertTrue(!c.equals(d), "not equals 3");
 
-            Comparator<String> comparator = new BeginsWithComparator();
+            Comparator<String> comparator = new PrefixComparator();
             List<String> s = new ArrayList<String>();
             s.add("a");
             s.add("abcdefgh");
@@ -464,52 +464,38 @@ public class Scramble {
 
         }
 
-    public static void assertTrue(boolean expression, String s) {
-        count++;
-        if (!expression) {
-            System.err.println("FAILED: " + s);
-            failed++;
-        }
-        else {
+        public static void assertTrue(boolean expression, String s) {
+            count++;
+            if (!expression) {
+                System.err.println("FAILED: " + s);
+                failed++;
+            }
+            else {
 //                System.err.println("SUCCEEDED: " + s);
-            succeeded++;
+                succeeded++;
+            }
+        }
+
+        public static void summary() {
+            System.err.println("" + count + " tests; " + succeeded + " succeeded; " + failed + " failed");
+        }
+
+    }
+
+    private static class ValueComparator
+            implements Comparator<String> {
+
+        private Map<String, Integer> map = null;
+
+        public ValueComparator(Map<String, Integer> map) {
+            this.map = map;
+        }
+
+        public int compare(String s1, String s2) {
+            if (map.get(s1) <= (map.get(s2))) {
+                return 1;
+            }
+            return -1;
         }
     }
-
-    public static void summary() {
-        System.err.println("" + count + " tests; " + succeeded + " succeeded; " + failed + " failed");
-    }
-
-}
-
-public static class BeginsWithComparator
-        implements Comparator<String> {
-
-    public int compare(String word, String prefix) {
-//            System.err.println("prefix: \"" + prefix + "\"; word: \"" + word + "\"");
-        if (word.startsWith(prefix)) {
-            return 0;
-        }
-        else {
-            return word.compareTo(prefix);
-        }
-    }
-}
-
-private static class ValueComparator
-        implements Comparator<String> {
-
-    private Map<String, Integer> map = null;
-
-    public ValueComparator(Map<String, Integer> map) {
-        this.map = map;
-    }
-
-    public int compare(String s1, String s2) {
-        if (map.get(s1) <= (map.get(s2))) {
-            return 1;
-        }
-        return -1;
-    }
-}
 }

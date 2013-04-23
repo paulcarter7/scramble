@@ -1,11 +1,11 @@
 package com.pac.scramble;
 
-public class PrefixComparator {
-    public PrefixComparator() {
-    }
+import java.util.Comparator;
+
+public class PrefixComparator
+implements Comparator <String> {
 
     public int compare(String word, String prefix) {
-//            System.err.println("prefix: \"" + prefix + "\"; word: \"" + word + "\"");
         if (word.startsWith(prefix)) {
             return 0;
         }
