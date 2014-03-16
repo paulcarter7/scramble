@@ -15,13 +15,4 @@ public enum ScrambleEnum {
     private ScrambleEnum(int v) {
         this.value = v;
     }
-
-
-    public String toString() {
-        String s = super.toString();
-        if (s.equals("q")) {
-            s += "qu";
-        }
-        return s;
-    }
 }

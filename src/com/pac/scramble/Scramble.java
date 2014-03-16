@@ -13,13 +13,31 @@ public class Scramble {
 
     private Set<ScrambleCharacter> used = new HashSet<ScrambleCharacter>();
     private Set<String> words = new TreeSet<String>();
+    private Map<String,Integer> wordMap = new HashMap<String,Integer>();
     private final PrefixDictionary dictionary;
     private final Character[][] scrambleBoard;
+
+    public static final String USAGE = "java com.pac.scramble.Scramble <16-character-input-board>";
 
     public static void main(String[] args)
             throws Exception {
 
-        // TODO parse input into a board and go...
+        System.err.println("args: " + Arrays.asList(args));
+        if(args.length == 1 && args[0].length() == 16) {
+            Scramble s = new Scramble(args[0], new TriePrefixDictionary("./resources/words.txt"));
+            s.init();
+            Set<String> words = s.findScrambleWords();
+            System.err.println("words.size: " + words.size());
+        }
+        else {
+            System.err.println("USAGE: " + USAGE);
+            System.exit(1);
+        }
+    }
+
+    public Scramble(String input, PrefixDictionary dictionary) {
+        this.dictionary = dictionary;
+        this.scrambleBoard = parseBoard(input);
     }
 
     public Scramble(Character[][] board, PrefixDictionary dictionary) {
@@ -28,8 +46,20 @@ public class Scramble {
     }
 
     public void init()
-            throws Exception {
+    throws Exception {
         dictionary.init();
+
+    }
+
+    private Character[][] parseBoard(String input) {
+        Character board [][] = new Character[4][4];
+        int k = 0;
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < 4; j++) {
+                board[i][j] = input.charAt(k++);
+            }
+        }
+        return board;
     }
 
     public static int scoreWord(String word) {
@@ -41,6 +71,9 @@ public class Scramble {
             for (int i = 0; i < word.length(); i++) {
                 ScrambleEnum scrambleEnum = ScrambleEnum.valueOf("" + word.charAt(i));
                 score += scrambleEnum.value;
+                if (scrambleEnum.equals(ScrambleEnum.qu)) {
+                    i++; // skips over the qu
+                }
             }
         }
 
@@ -145,6 +178,16 @@ public class Scramble {
 
     }
 
+    private void addOrReplaceWord(String word) {
+        int score = scoreWord(word);
+        if (!wordMap.containsKey(word)) {
+            wordMap.put(word, score);
+            return;
+        }
+        if (wordMap.get(word) > score) {
+            wordMap.put(word, score);
+        }
+    }
     private static Set<ScrambleCharacter> findUnusedNeighbors(ScrambleCharacter scrambleCharacter, Character[][] sc) {
         Set<ScrambleCharacter> a = new HashSet<ScrambleCharacter>();
         int row = scrambleCharacter.row;
@@ -251,6 +294,11 @@ public class Scramble {
                 {'n', 's', 'i', 'm'},
                 {'s', 't', 'a', 's'},
                 {'e', 'r', 'g', 'v'},
+        };
+
+        public static final Character[][] testScrambleBoardWithQs = {
+                {'q', 'i'},
+                {'t', 'e'}
         };
 
         public static void main(String[] args)
@@ -397,6 +445,13 @@ public class Scramble {
             theScramble = new Scramble(testScrambleBoard, new TriePrefixDictionary("./resources/words.txt"));
             testPrefixDictionaryImplementation(theScramble, "TriePrefixDictionary");
 
+            theScramble = new Scramble("lenonsimstasergv", new TriePrefixDictionary("./resources/words.txt"));
+            testPrefixDictionaryImplementation(theScramble, "TriePrefixDictionary");
+
+//            theScramble = new Scramble(testScrambleBoardWithQs, new SimplePrefixDictionary("./resources/words.txt"));
+//            theScramble.init();
+//            Set<String> qWords = theScramble.findScrambleWords();
+//            assertTrue(qWords.contains("quit"), "should find quit");
 
             summary();
         }
@@ -461,7 +516,6 @@ public class Scramble {
 //            monstera:27
 //            smarties:26
 
-
         }
 
         public static void assertTrue(boolean expression, String s) {
@@ -477,7 +531,7 @@ public class Scramble {
         }
 
         public static void summary() {
-            System.err.println("" + count + " tests; " + succeeded + " succeeded; " + failed + " failed");
+            System.err.println("Test Summary: " + count + " tests; " + succeeded + " succeeded; " + failed + " failed");
         }
 
     }

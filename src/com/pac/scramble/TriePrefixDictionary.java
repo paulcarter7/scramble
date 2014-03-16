@@ -28,17 +28,20 @@ public class TriePrefixDictionary
     public void init()
     throws Exception {
 
+        int count = 0;
         BufferedReader file = null;
         try {
             file = new BufferedReader(new FileReader(wordFile));
             String word = null;
             while ((word = file.readLine()) != null) {
                 trie.insertWord(word);
+                count++;
             }
         }
         finally {
             file.close();
         }
+        System.err.println("loaded " + count + " words");
     }
 
     @Override
