@@ -13,7 +13,7 @@ public class Scramble {
 
     private Set<ScrambleCharacter> used = new HashSet<ScrambleCharacter>();
     private Set<String> words = new TreeSet<String>();
-    private Map<String,Integer> wordMap = new HashMap<String,Integer>();
+    private Map<String,Integer> wordMap = new TreeMap<String,Integer>();
     private final PrefixDictionary dictionary;
     private final Character[][] scrambleBoard;
 
@@ -28,7 +28,7 @@ public class Scramble {
             s.init();
             Set<String> words = s.findScrambleWords();
             System.err.println("words.size: " + words.size());
-        }
+		}
         else {
             System.err.println("USAGE: " + USAGE);
             System.exit(1);
@@ -50,6 +50,18 @@ public class Scramble {
         dictionary.init();
 
     }
+
+	public Map<String,Integer> getWordsByAlpha() {
+		return wordMap;
+	}
+
+	public Map<String,Integer> getWordsByHighestScoring() {
+		ValueComparator valueComparator = new ValueComparator(wordMap);
+		Map<String, Integer> sortedScores = new TreeMap<String, Integer>(valueComparator);
+		sortedScores.putAll(wordMap);
+
+		return sortedScores;
+	}
 
     private Character[][] parseBoard(String input) {
         Character board [][] = new Character[4][4];
@@ -138,7 +150,7 @@ public class Scramble {
         for (int i = 0; i < scrambleBoard.length; i++) {
             for (int j = 0; j < scrambleBoard[i].length; j++) {
                 used.clear();
-                recurse(new ScrambleCharacter(scrambleBoard[i][j], i, j), "" + scrambleBoard[i][j]);
+                recurse(new ScrambleCharacter(scrambleBoard[i][j]., i, j), "" + scrambleBoard[i][j]);
             }
         }
 
@@ -169,6 +181,7 @@ public class Scramble {
                 if (dictionary.hasPrefix(prefix)) {
                     if (dictionary.hasWord(prefix)) {
                         words.add(prefix);
+						addOrReplaceWord(prefix);
                     }
                     recurse(sc2, prefix);
                 }
@@ -235,10 +248,15 @@ public class Scramble {
         private ScrambleEnum scrambleEnum;
 
         public ScrambleCharacter(char c, int row, int col) {
-            scrambleEnum = ScrambleEnum.valueOf("" + c);
-            this.row = row;
-            this.col = col;
-        }
+			if (c != 'q') {
+				scrambleEnum = ScrambleEnum.valueOf("" + c);
+			}
+			else {
+				scrambleEnum = ScrambleEnum.qu;
+			}
+			this.row = row;
+			this.col = col;
+		}
 
         public String toString() {
             return new String(scrambleEnum.toString() + "(" + row + "," + col + "):" + scrambleEnum.value);
@@ -448,10 +466,10 @@ public class Scramble {
             theScramble = new Scramble("lenonsimstasergv", new TriePrefixDictionary("./resources/words.txt"));
             testPrefixDictionaryImplementation(theScramble, "TriePrefixDictionary");
 
-//            theScramble = new Scramble(testScrambleBoardWithQs, new SimplePrefixDictionary("./resources/words.txt"));
-//            theScramble.init();
-//            Set<String> qWords = theScramble.findScrambleWords();
-//            assertTrue(qWords.contains("quit"), "should find quit");
+            theScramble = new Scramble(testScrambleBoardWithQs, new SimplePrefixDictionary("./resources/words.txt"));
+            theScramble.init();
+            Set<String> qWords = theScramble.findScrambleWords();
+            assertTrue(qWords.contains("quit"), "should find quit");
 
             summary();
         }
@@ -469,17 +487,7 @@ public class Scramble {
             System.err.println("time for implementation " + implementationName + "=" + time);
             assertTrue(words.size() == 481, implementationName + " should find 481 words");
 
-            Map<String, Integer> scores = new HashMap<String, Integer>();
-            for (String str : words) {
-                int score = scoreWord(str);
-                scores.put(str, score);
-            }
-
-            ValueComparator valueComparator = new ValueComparator(scores);
-            Map<String, Integer> sortedScores = new TreeMap<String, Integer>(valueComparator);
-
-            sortedScores.putAll(scores);
-            Set<Map.Entry<String, Integer>> entries = sortedScores.entrySet();
+            Set<Map.Entry<String, Integer>> entries = scramble.getWordsByHighestScoring().entrySet();
             Iterator<Map.Entry<String, Integer>> scoreIterator = entries.iterator();
             Map.Entry<String, Integer> score = scoreIterator.next();
 
@@ -487,13 +495,15 @@ public class Scramble {
             assertTrue(score.getKey().equals("stramonies"), implementationName + ": highest scoring word is stramonies");
             assertTrue(score.getValue().equals(39), implementationName + ": highest scoring word is stramonies, score is 39");
 
-            // next highest scoring element:
+            // 7th highest scoring element:
             score = scoreIterator.next();
-            assertTrue(score.getKey().equals("monitress"), implementationName + ": 2nd highest scoring word is monitress");
-            assertTrue(score.getValue().equals(33), implementationName + ": 2nd highest scoring word is stramonies, score is 33");
-//            for (Map.Entry<String, Integer> entry : sortedScores.entrySet()) {
-//                System.err.println(entry.getKey() + ":" + entry.getValue());
-//            }
+			score = scoreIterator.next();
+			score = scoreIterator.next();
+			score = scoreIterator.next();
+			score = scoreIterator.next();
+			score = scoreIterator.next();
+            assertTrue(score.getKey().equals("assertion"), implementationName + ": 7th highest scoring word is 'assertion'");
+            assertTrue(score.getValue().equals(30), implementationName + ": 7th highest scoring word is 'assertion', score is 30");
 
 //            183056 words loaded in dictionary
 //            scores.size(): 481
