@@ -27,7 +27,8 @@ public class Scramble {
             Scramble s = new Scramble(args[0], new TriePrefixDictionary("./resources/words.txt"));
             s.init();
             Set<String> words = s.findScrambleWords();
-            System.err.println("words.size: " + words.size());
+			System.err.println("words.size: " + words.size());
+			System.err.println(s.getWordsByHighestScoring());
 		}
         else {
             System.err.println("USAGE: " + USAGE);
@@ -74,54 +75,6 @@ public class Scramble {
         return board;
     }
 
-    public static int scoreWord(String word) {
-        int score = 0;
-        if (word.length() == 2) {
-            score = 1;
-        }
-        else {
-            for (int i = 0; i < word.length(); i++) {
-                ScrambleEnum scrambleEnum = ScrambleEnum.valueOf("" + word.charAt(i));
-                score += scrambleEnum.value;
-                if (scrambleEnum.equals(ScrambleEnum.qu)) {
-                    i++; // skips over the qu
-                }
-            }
-        }
-
-        switch (word.length()) {
-            case 1:
-            case 2:
-            case 3:
-            case 4:
-                break;
-            case 5:
-                score += 3;
-                break;
-            case 6:
-                score += 6;
-                break;
-            case 7:
-                score += 10;
-                break;
-            case 8:
-                score += 15;
-                break;
-            case 9:
-                score += 20;
-                break;
-            case 10:
-                score += 25;
-                break;
-            default:
-                throw new RuntimeException("this word (" + word + ") is too long: " + word.length() + "; I only know" +
-                        " how to score words up to 10 letters long");
-
-        }
-        return score;
-    }
-
-
     private static int findWordPermutations(int totalPossibleLetters) {
         // assumes square arrays for now
         int total = 0;
@@ -149,8 +102,9 @@ public class Scramble {
 
         for (int i = 0; i < scrambleBoard.length; i++) {
             for (int j = 0; j < scrambleBoard[i].length; j++) {
-                used.clear();
-                recurse(new ScrambleCharacter(scrambleBoard[i][j]., i, j), "" + scrambleBoard[i][j]);
+				used.clear();
+				ScrambleCharacter sc = new ScrambleCharacter(scrambleBoard[i][j], i, j);
+				recurse(new ScrambleCharacter(scrambleBoard[i][j], i, j),  new ScrambleWord(sc));
             }
         }
 
@@ -163,27 +117,24 @@ public class Scramble {
      * then in word dictionary - add to found words if found
      * recurse
      */
-    private void recurse(ScrambleCharacter scrambleCharacter, String s) {
-
-        used.add(scrambleCharacter);
+    private void recurse(ScrambleCharacter scrambleCharacter, ScrambleWord scrambleWord) {
+		used.add(scrambleCharacter);
         Set<ScrambleCharacter> neighbors = findUnusedNeighbors(scrambleCharacter, scrambleBoard);
-        for (ScrambleCharacter neighbor : neighbors) {
+		for (ScrambleCharacter neighbor : neighbors) {
 
-            ScrambleCharacter sc2 = new ScrambleCharacter(scrambleBoard[neighbor.row][neighbor.col], neighbor.row, neighbor.col);
+            ScrambleCharacter sc2 = new ScrambleCharacter(scrambleBoard[neighbor.getRow()][neighbor.getCol()],
+					neighbor.getRow(), neighbor.getCol());
             if (!used.contains(sc2)) {
                 // check if has prefix
-                String prefix = s + sc2.scrambleEnum;
-
-                //
-                // TODO: check here to see if we already found this word previously?
-                //
-
-                if (dictionary.hasPrefix(prefix)) {
+				ScrambleWord sw2 = scrambleWord.copy();
+				sw2.addLetter(sc2);
+				String prefix = sw2.getWord();
+				if (dictionary.hasPrefix(prefix)) {
                     if (dictionary.hasWord(prefix)) {
                         words.add(prefix);
-						addOrReplaceWord(prefix);
+						addOrReplaceWord(sw2);
                     }
-                    recurse(sc2, prefix);
+                    recurse(sc2, sw2);
                 }
             }
         }
@@ -191,20 +142,21 @@ public class Scramble {
 
     }
 
-    private void addOrReplaceWord(String word) {
-        int score = scoreWord(word);
-        if (!wordMap.containsKey(word)) {
-            wordMap.put(word, score);
+    private void addOrReplaceWord(ScrambleWord word) {
+        int score = word.score();
+        if (!wordMap.containsKey(word.getWord())) {
+            wordMap.put(word.getWord(), score);
             return;
         }
-        if (wordMap.get(word) > score) {
-            wordMap.put(word, score);
+        if (wordMap.get(word.getWord()) > score) {
+            wordMap.put(word.getWord(), score);
         }
     }
+
     private static Set<ScrambleCharacter> findUnusedNeighbors(ScrambleCharacter scrambleCharacter, Character[][] sc) {
         Set<ScrambleCharacter> a = new HashSet<ScrambleCharacter>();
-        int row = scrambleCharacter.row;
-        int col = scrambleCharacter.col;
+        int row = scrambleCharacter.getRow();
+        int col = scrambleCharacter.getCol();
 
         if (row - 1 >= 0) {
             if (col - 1 >= 0) {
@@ -234,65 +186,7 @@ public class Scramble {
                 a.add(new ScrambleCharacter(sc[row + 1][col + 1], row + 1, col + 1));
             }
         }
-        return a;
-    }
-
-    /**
-     * represents a letter and location on the board of a scramble character
-     * <p/>
-     * TODO: need to support for word and letter multipliers
-     */
-    private static class ScrambleCharacter {
-        private int row;
-        private int col;
-        private ScrambleEnum scrambleEnum;
-
-        public ScrambleCharacter(char c, int row, int col) {
-			if (c != 'q') {
-				scrambleEnum = ScrambleEnum.valueOf("" + c);
-			}
-			else {
-				scrambleEnum = ScrambleEnum.qu;
-			}
-			this.row = row;
-			this.col = col;
-		}
-
-        public String toString() {
-            return new String(scrambleEnum.toString() + "(" + row + "," + col + "):" + scrambleEnum.value);
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) {
-                return true;
-            }
-            if (o == null || getClass() != o.getClass()) {
-                return false;
-            }
-
-            ScrambleCharacter that = (ScrambleCharacter) o;
-
-            if (scrambleEnum != that.scrambleEnum) {
-                return false;
-            }
-            if (col != that.col) {
-                return false;
-            }
-            if (row != that.row) {
-                return false;
-            }
-
-            return true;
-        }
-
-        @Override
-        public int hashCode() {
-            int result = row;
-            result = 31 * result + col;
-            result = 31 * result + scrambleEnum.hashCode();
-            return result;
-        }
+		return a;
     }
 
     public static class Test {
@@ -315,7 +209,7 @@ public class Scramble {
         };
 
         public static final Character[][] testScrambleBoardWithQs = {
-                {'q', 'i'},
+                {'i', 'q'},
                 {'t', 'e'}
         };
 
@@ -343,7 +237,7 @@ public class Scramble {
             assertTrue(result.contains(new ScrambleCharacter('e', 1, 1)), "");
             assertTrue(result.contains(new ScrambleCharacter('h', 2, 1)), "");
             assertTrue(result.contains(new ScrambleCharacter('f', 1, 2)), "");
-//
+
             result = findUnusedNeighbors(new ScrambleCharacter('f', 1, 2), scream);
             assertTrue(result.size() == 5, "size(1,2)");
             assertTrue(result.contains(new ScrambleCharacter('c', 0, 2)), "");
@@ -422,16 +316,15 @@ public class Scramble {
             assertTrue(iter.next().getValue() == 15, "test third value");
             assertTrue(iter.next().getValue() == 10, "test last value");
 
-            assertTrue(scoreWord("costarred") == 33, "costarred score");
-            assertTrue(scoreWord("portered") == 27, "portered score");
-            assertTrue(scoreWord("copters") == 23, "copters score");
-            assertTrue(scoreWord("petard") == 16, "petard score");
-            assertTrue(scoreWord("dropt") == 12, "dropt score");
-            assertTrue(scoreWord("coax") == 14, "coax score");
-            assertTrue(scoreWord("pew") == 9, "pew score");
-            assertTrue(scoreWord("os") == 1, "os score");
-            assertTrue(scoreWord("ox") == 1, "ox score");
-
+			assertTrue(new ScrambleWord("costarred").score() == 33, "costarred score");
+			assertTrue(new ScrambleWord("portered").score() == 27, "portered score");
+			assertTrue(new ScrambleWord("copters").score() == 23, "copters score");
+			assertTrue(new ScrambleWord("petard").score() == 16, "petard score");
+			assertTrue(new ScrambleWord("dropt").score() == 12, "dropt score");
+			assertTrue(new ScrambleWord("coax").score() == 14, "coax score");
+			assertTrue(new ScrambleWord("pew").score() == 9, "pew score");
+			assertTrue(new ScrambleWord("os").score() == 1, "os score");
+			assertTrue(new ScrambleWord("ox").score() == 1, "ox score");
 
             // quick test to see if our search algo can find all permutations
             // dummy implementation will treat all combinations as words
@@ -454,7 +347,7 @@ public class Scramble {
             });
 
             Set<String> words = scramble.findScrambleWords();
-            assertTrue(words.size() == findWordPermutations(4), "dummy prefix impl should find: " +
+			assertTrue(words.size() == findWordPermutations(4), "dummy prefix impl should find: " +
                     findWordPermutations(4) + " word permutations for a 2x2 char board");
 
             Scramble theScramble = new Scramble(testScrambleBoard, new SimplePrefixDictionary("./resources/words.txt"));
@@ -464,15 +357,18 @@ public class Scramble {
             testPrefixDictionaryImplementation(theScramble, "TriePrefixDictionary");
 
             theScramble = new Scramble("lenonsimstasergv", new TriePrefixDictionary("./resources/words.txt"));
-            testPrefixDictionaryImplementation(theScramble, "TriePrefixDictionary");
-
+            testPrefixDictionaryImplementation(theScramble, "TriePrefixDictionary (string constructor)");
+//
             theScramble = new Scramble(testScrambleBoardWithQs, new SimplePrefixDictionary("./resources/words.txt"));
             theScramble.init();
             Set<String> qWords = theScramble.findScrambleWords();
-            assertTrue(qWords.contains("quit"), "should find quit");
+			System.err.println("qwords; " + qWords);
+			assertTrue(qWords.contains("quit"), "should find quit");
 
             summary();
-        }
+
+//			System.err.println("16 char board (4x4) has " + findWordPermutations(16) + " possible permutations");
+		}
 
         public static void testPrefixDictionaryImplementation(Scramble scramble, String implementationName)
                 throws Exception {
@@ -483,7 +379,7 @@ public class Scramble {
             scramble.init();
             long time = System.currentTimeMillis();
             Set<String> words = scramble.findScrambleWords();
-            time = System.currentTimeMillis() - time;
+			time = System.currentTimeMillis() - time;
             System.err.println("time for implementation " + implementationName + "=" + time);
             assertTrue(words.size() == 481, implementationName + " should find 481 words");
 
