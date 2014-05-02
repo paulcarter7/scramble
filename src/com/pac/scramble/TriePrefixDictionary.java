@@ -41,7 +41,7 @@ public class TriePrefixDictionary
         finally {
             file.close();
         }
-        System.err.println("loaded " + count + " words");
+//        System.err.println("loaded " + count + " words");
     }
 
     @Override

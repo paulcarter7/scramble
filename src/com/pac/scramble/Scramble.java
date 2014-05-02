@@ -15,7 +15,7 @@ public class Scramble {
     private Set<String> words = new TreeSet<String>();
     private Map<String,Integer> wordMap = new TreeMap<String,Integer>();
     private final PrefixDictionary dictionary;
-    private final Character[][] scrambleBoard;
+	private ScrambleCharacter[][] sb = null;
 
     public static final String USAGE = "java com.pac.scramble.Scramble <16-character-input-board>";
 
@@ -38,12 +38,12 @@ public class Scramble {
 
     public Scramble(String input, PrefixDictionary dictionary) {
         this.dictionary = dictionary;
-        this.scrambleBoard = parseBoard(input);
-    }
+		this.sb = pb(input);
+	}
 
     public Scramble(Character[][] board, PrefixDictionary dictionary) {
         this.dictionary = dictionary;
-        this.scrambleBoard = board;
+        this.sb = parseBoard(board);
     }
 
     public void init()
@@ -56,20 +56,53 @@ public class Scramble {
 		return wordMap;
 	}
 
-	public Map<String,Integer> getWordsByHighestScoring() {
+	public TreeMap<String,Integer> getWordsByHighestScoring() {
 		ValueComparator valueComparator = new ValueComparator(wordMap);
-		Map<String, Integer> sortedScores = new TreeMap<String, Integer>(valueComparator);
+		TreeMap<String, Integer> sortedScores = new TreeMap<String, Integer>(valueComparator);
 		sortedScores.putAll(wordMap);
 
 		return sortedScores;
 	}
 
-    private Character[][] parseBoard(String input) {
-        Character board [][] = new Character[4][4];
-        int k = 0;
-        for (int i = 0; i < 4; i++) {
-            for (int j = 0; j < 4; j++) {
-                board[i][j] = input.charAt(k++);
+	private ScrambleCharacter[][] pb(String input) {
+		ScrambleCharacter[][] b = new ScrambleCharacter[4][4];
+		int k = 0;
+
+		for (int i = 0; i < 4; i++) {
+			for (int j = 0; j < 4; j++) {
+				char ch = input.charAt(k++);
+				if (ch >= 'a' && ch <= 'z') {
+					b[i][j] = new ScrambleCharacter(ch, i, j);
+				}
+				else if (ch >= '0' && ch <= '9') {
+					// multiplier
+					int multiplier = Integer.parseInt("" + ch);
+
+					// next char is mult type word(*) or letter(!)
+					char multiplierType = input.charAt(k++);
+					ch = input.charAt(k++);
+					ScrambleCharacter sc = new ScrambleCharacter(ch, i, j);
+					if (multiplierType == '*') {
+						sc.setWordMultiplier(multiplier);
+					}
+					else if (multiplierType == '!') {
+						sc.setLetterMultiplier(multiplier);
+					}
+					else {
+						throw new RuntimeException("bad multiplier value: " + multiplierType + "(board: " + input + ")");
+					}
+					b[i][j] = sc;
+				}
+			}
+		}
+		return b;
+	}
+
+	private ScrambleCharacter[][] parseBoard(Character[][] input) {
+		ScrambleCharacter[][] board = new ScrambleCharacter[input.length][input[0].length];
+        for (int i = 0; i < input.length; i++) {
+            for (int j = 0; j < input[0].length; j++) {
+                board[i][j] = new ScrambleCharacter(input[i][j], i, j);
             }
         }
         return board;
@@ -100,11 +133,12 @@ public class Scramble {
 
     public Set<String> findScrambleWords() {
 
-        for (int i = 0; i < scrambleBoard.length; i++) {
-            for (int j = 0; j < scrambleBoard[i].length; j++) {
+        for (int i = 0; i < sb.length; i++) {
+            for (int j = 0; j < sb[i].length; j++) {
 				used.clear();
-				ScrambleCharacter sc = new ScrambleCharacter(scrambleBoard[i][j], i, j);
-				recurse(new ScrambleCharacter(scrambleBoard[i][j], i, j),  new ScrambleWord(sc));
+//				ScrambleCharacter sc = new ScrambleCharacter(scrambleBoard[i][j], i, j);
+//				recurse(new ScrambleCharacter(scrambleBoard[i][j], i, j),  new ScrambleWord(sc));
+				recurse(sb[i][j],new ScrambleWord(sb[i][j]));
             }
         }
 
@@ -119,11 +153,10 @@ public class Scramble {
      */
     private void recurse(ScrambleCharacter scrambleCharacter, ScrambleWord scrambleWord) {
 		used.add(scrambleCharacter);
-        Set<ScrambleCharacter> neighbors = findUnusedNeighbors(scrambleCharacter, scrambleBoard);
+        Set<ScrambleCharacter> neighbors = findUnusedNeighbors(scrambleCharacter, sb);
 		for (ScrambleCharacter neighbor : neighbors) {
 
-            ScrambleCharacter sc2 = new ScrambleCharacter(scrambleBoard[neighbor.getRow()][neighbor.getCol()],
-					neighbor.getRow(), neighbor.getCol());
+            ScrambleCharacter sc2 = sb[neighbor.getRow()][neighbor.getCol()];
             if (!used.contains(sc2)) {
                 // check if has prefix
 				ScrambleWord sw2 = scrambleWord.copy();
@@ -153,37 +186,37 @@ public class Scramble {
         }
     }
 
-    private static Set<ScrambleCharacter> findUnusedNeighbors(ScrambleCharacter scrambleCharacter, Character[][] sc) {
+    private static Set<ScrambleCharacter> findUnusedNeighbors(ScrambleCharacter scrambleCharacter, ScrambleCharacter[][] sb) {
         Set<ScrambleCharacter> a = new HashSet<ScrambleCharacter>();
         int row = scrambleCharacter.getRow();
         int col = scrambleCharacter.getCol();
 
         if (row - 1 >= 0) {
             if (col - 1 >= 0) {
-                a.add(new ScrambleCharacter(sc[row - 1][col - 1], row - 1, col - 1));
+                a.add(sb[row - 1][col - 1]);
             }
-            a.add(new ScrambleCharacter(sc[row - 1][col], row - 1, col));
+            a.add(sb[row - 1][col]);
 
-            if (col + 1 < sc[row - 1].length) {
-                a.add(new ScrambleCharacter(sc[row - 1][col + 1], row - 1, col + 1));
+            if (col + 1 < sb[row - 1].length) {
+                a.add(sb[row - 1][col + 1]);
             }
         }
 
         if (col - 1 >= 0) {
-            a.add(new ScrambleCharacter(sc[row][col - 1], row, col - 1));
+            a.add(sb[row][col - 1]);
         }
-        if (col + 1 < sc[row].length) {
-            a.add(new ScrambleCharacter(sc[row][col + 1], row, col + 1));
+        if (col + 1 < sb[row].length) {
+            a.add(sb[row][col + 1]);
         }
 
-        if (row + 1 < sc.length) {
+        if (row + 1 < sb.length) {
             if (col - 1 >= 0) {
-                a.add(new ScrambleCharacter(sc[row + 1][col - 1], row + 1, col - 1));
+                a.add(sb[row + 1][col - 1]);
             }
-            a.add(new ScrambleCharacter(sc[row + 1][col], row + 1, col));
+            a.add(sb[row + 1][col]);
 
-            if (col + 1 < sc[row + 1].length) {
-                a.add(new ScrambleCharacter(sc[row + 1][col + 1], row + 1, col + 1));
+            if (col + 1 < sb[row + 1].length) {
+                a.add(sb[row + 1][col + 1]);
             }
         }
 		return a;
@@ -215,106 +248,107 @@ public class Scramble {
 
         public static void main(String[] args)
                 throws Exception {
-            Set<ScrambleCharacter> result = findUnusedNeighbors(new ScrambleCharacter('a', 0, 0), scream);
-            assertTrue(result.size() == 3, "size(0,0)");
-            assertTrue(result.contains(new ScrambleCharacter('b', 0, 1)), "");
-            assertTrue(result.contains(new ScrambleCharacter('e', 1, 1)), "");
-            assertTrue(result.contains(new ScrambleCharacter('d', 1, 0)), "");
+			Scramble scr = new Scramble(scream, null);
+			Set<ScrambleCharacter> result = findUnusedNeighbors(new ScrambleCharacter('a', 0, 0), scr.sb);
+			assertTrue(result.size() == 3, "size(0,0)");
+			assertTrue(result.contains(new ScrambleCharacter('b', 0, 1)), "");
+			assertTrue(result.contains(new ScrambleCharacter('e', 1, 1)), "");
+			assertTrue(result.contains(new ScrambleCharacter('d', 1, 0)), "");
 
-            result = findUnusedNeighbors(new ScrambleCharacter('e', 1, 1), scream);
-            assertTrue(result.size() == 8, "size(1,1)");
-            assertTrue(result.contains(new ScrambleCharacter('a', 0, 0)), "");
-            assertTrue(result.contains(new ScrambleCharacter('b', 0, 1)), "");
-            assertTrue(result.contains(new ScrambleCharacter('c', 0, 2)), "");
-            assertTrue(result.contains(new ScrambleCharacter('d', 1, 0)), "");
-            assertTrue(result.contains(new ScrambleCharacter('f', 1, 2)), "");
-            assertTrue(result.contains(new ScrambleCharacter('g', 2, 0)), "");
-            assertTrue(result.contains(new ScrambleCharacter('h', 2, 1)), "");
-            assertTrue(result.contains(new ScrambleCharacter('i', 2, 2)), "");
+			result = findUnusedNeighbors(new ScrambleCharacter('e', 1, 1), scr.sb);
+			assertTrue(result.size() == 8, "size(1,1)");
+			assertTrue(result.contains(new ScrambleCharacter('a', 0, 0)), "");
+			assertTrue(result.contains(new ScrambleCharacter('b', 0, 1)), "");
+			assertTrue(result.contains(new ScrambleCharacter('c', 0, 2)), "");
+			assertTrue(result.contains(new ScrambleCharacter('d', 1, 0)), "");
+			assertTrue(result.contains(new ScrambleCharacter('f', 1, 2)), "");
+			assertTrue(result.contains(new ScrambleCharacter('g', 2, 0)), "");
+			assertTrue(result.contains(new ScrambleCharacter('h', 2, 1)), "");
+			assertTrue(result.contains(new ScrambleCharacter('i', 2, 2)), "");
 
-            result = findUnusedNeighbors(new ScrambleCharacter('i', 2, 2), scream);
-            assertTrue(result.size() == 3, "size(2,2)");
-            assertTrue(result.contains(new ScrambleCharacter('e', 1, 1)), "");
-            assertTrue(result.contains(new ScrambleCharacter('h', 2, 1)), "");
-            assertTrue(result.contains(new ScrambleCharacter('f', 1, 2)), "");
+			result = findUnusedNeighbors(new ScrambleCharacter('i', 2, 2), scr.sb);
+			assertTrue(result.size() == 3, "size(2,2)");
+			assertTrue(result.contains(new ScrambleCharacter('e', 1, 1)), "");
+			assertTrue(result.contains(new ScrambleCharacter('h', 2, 1)), "");
+			assertTrue(result.contains(new ScrambleCharacter('f', 1, 2)), "");
 
-            result = findUnusedNeighbors(new ScrambleCharacter('f', 1, 2), scream);
-            assertTrue(result.size() == 5, "size(1,2)");
-            assertTrue(result.contains(new ScrambleCharacter('c', 0, 2)), "");
-            assertTrue(result.contains(new ScrambleCharacter('b', 0, 1)), "");
-            assertTrue(result.contains(new ScrambleCharacter('e', 1, 1)), "");
-            assertTrue(result.contains(new ScrambleCharacter('h', 2, 1)), "");
-            assertTrue(result.contains(new ScrambleCharacter('i', 2, 2)), "");
+			result = findUnusedNeighbors(new ScrambleCharacter('f', 1, 2), scr.sb);
+			assertTrue(result.size() == 5, "size(1,2)");
+			assertTrue(result.contains(new ScrambleCharacter('c', 0, 2)), "");
+			assertTrue(result.contains(new ScrambleCharacter('b', 0, 1)), "");
+			assertTrue(result.contains(new ScrambleCharacter('e', 1, 1)), "");
+			assertTrue(result.contains(new ScrambleCharacter('h', 2, 1)), "");
+			assertTrue(result.contains(new ScrambleCharacter('i', 2, 2)), "");
 
-            result = findUnusedNeighbors(new ScrambleCharacter('d', 1, 0), scream);
-            assertTrue(result.size() == 5, "size(1,0)");
-            assertTrue(result.contains(new ScrambleCharacter('a', 0, 0)), "");
-            assertTrue(result.contains(new ScrambleCharacter('b', 0, 1)), "");
-            assertTrue(result.contains(new ScrambleCharacter('e', 1, 1)), "");
-            assertTrue(result.contains(new ScrambleCharacter('h', 2, 1)), "");
-            assertTrue(result.contains(new ScrambleCharacter('g', 2, 0)), "");
+			result = findUnusedNeighbors(new ScrambleCharacter('d', 1, 0), scr.sb);
+			assertTrue(result.size() == 5, "size(1,0)");
+			assertTrue(result.contains(new ScrambleCharacter('a', 0, 0)), "");
+			assertTrue(result.contains(new ScrambleCharacter('b', 0, 1)), "");
+			assertTrue(result.contains(new ScrambleCharacter('e', 1, 1)), "");
+			assertTrue(result.contains(new ScrambleCharacter('h', 2, 1)), "");
+			assertTrue(result.contains(new ScrambleCharacter('g', 2, 0)), "");
 
-            assertTrue(f(2) == 2, "2!");
-            assertTrue(f(3) == 6, "3!");
-            assertTrue(f(4) == 24, "4!");
-            assertTrue(f(5) == 120, "5!");
+			assertTrue(f(2) == 2, "2!");
+			assertTrue(f(3) == 6, "3!");
+			assertTrue(f(4) == 24, "4!");
+			assertTrue(f(5) == 120, "5!");
 
-            assertTrue(findWordPermutations(2) == 2, "2 letter combos");
-            assertTrue(findWordPermutations(4) == 60, "4 letter combos");
-            assertTrue(findWordPermutations(9) == 986400, "9 letter combos");
+			assertTrue(findWordPermutations(2) == 2, "2 letter combos");
+			assertTrue(findWordPermutations(4) == 60, "4 letter combos");
+			assertTrue(findWordPermutations(9) == 986400, "9 letter combos");
 
-            ScrambleCharacter c = new ScrambleCharacter('a', 1, 1);
-            ScrambleCharacter d = new ScrambleCharacter('a', 1, 1);
-            assertTrue(c.equals(d), "equals test");
-            assertTrue(c.equals(c), "equals test");
+			ScrambleCharacter c = new ScrambleCharacter('a', 1, 1);
+			ScrambleCharacter d = new ScrambleCharacter('a', 1, 1);
+			assertTrue(c.equals(d), "equals test");
+			assertTrue(c.equals(c), "equals test");
 
-            d = new ScrambleCharacter('b', 1, 1);
-            assertTrue(!c.equals(d), "not equals 1");
+			d = new ScrambleCharacter('b', 1, 1);
+			assertTrue(!c.equals(d), "not equals 1");
 
-            d = new ScrambleCharacter('a', 0, 1);
-            assertTrue(!c.equals(d), "not equals 2");
+			d = new ScrambleCharacter('a', 0, 1);
+			assertTrue(!c.equals(d), "not equals 2");
 
-            d = new ScrambleCharacter('a', 1, 0);
-            assertTrue(!c.equals(d), "not equals 3");
+			d = new ScrambleCharacter('a', 1, 0);
+			assertTrue(!c.equals(d), "not equals 3");
 
-            Comparator<String> comparator = new PrefixComparator();
-            List<String> s = new ArrayList<String>();
-            s.add("a");
-            s.add("abcdefgh");
-            s.add("acdezxy");
-            assertTrue(Collections.binarySearch(s, "abc", comparator) == 1, "comparator test");
-            assertTrue(Collections.binarySearch(s, "ad", comparator) != 1, "comparator test 2");
-            assertTrue(Collections.binarySearch(s, "z", comparator) != 1, "comparator test 3");
+			Comparator<String> comparator = new PrefixComparator();
+			List<String> s = new ArrayList<String>();
+			s.add("a");
+			s.add("abcdefgh");
+			s.add("acdezxy");
+			assertTrue(Collections.binarySearch(s, "abc", comparator) == 1, "comparator test");
+			assertTrue(Collections.binarySearch(s, "ad", comparator) != 1, "comparator test 2");
+			assertTrue(Collections.binarySearch(s, "z", comparator) != 1, "comparator test 3");
 
-            Map<String, Integer> scores = new HashMap<String, Integer>();
-            scores.put("that", 20);
-            scores.put("this", 10);
-            scores.put("theother", 15);
-            scores.put("holla", 15);
-            assertTrue(scores.size() == 4, "unsorted score map size");
-            assertTrue(scores.get("that").equals(20), "simple get from scores");
-            assertTrue(scores.get("holla").equals(15), "simple get2 from scores");
+			Map<String, Integer> scores = new HashMap<String, Integer>();
+			scores.put("that", 20);
+			scores.put("this", 10);
+			scores.put("theother", 15);
+			scores.put("holla", 15);
+			assertTrue(scores.size() == 4, "unsorted score map size");
+			assertTrue(scores.get("that").equals(20), "simple get from scores");
+			assertTrue(scores.get("holla").equals(15), "simple get2 from scores");
 
-            ValueComparator vc = new ValueComparator(scores);
-            Map<String, Integer> sortedMap = new TreeMap<String, Integer>(vc);
+			ValueComparator vc = new ValueComparator(scores);
+			Map<String, Integer> sortedMap = new TreeMap<String, Integer>(vc);
 //            sortedMap.putAll(scores);
-            sortedMap.put("that", 20);
-            sortedMap.put("this", 10);
-            sortedMap.put("theother", 15);
-            sortedMap.put("holla", 15);
+			sortedMap.put("that", 20);
+			sortedMap.put("this", 10);
+			sortedMap.put("theother", 15);
+			sortedMap.put("holla", 15);
 
-            assertTrue(sortedMap.size() == 4, "sorted map size");
+			assertTrue(sortedMap.size() == 4, "sorted map size");
 
-            // this doesn't work and I don't quite get why... something to do with Comparator
-            // not consistent with equals methinks grrrrrr
+			// this doesn't work and I don't quite get why... something to do with Comparator
+			// not consistent with equals methinks grrrrrr
 //            System.err.println(sortedMap.get("that"));
 //            assertTrue(sortedMap.get("that").equals(20), "simple get");
-            Iterator<Map.Entry<String, Integer>> iter = sortedMap.entrySet().iterator();
+			Iterator<Map.Entry<String, Integer>> iter = sortedMap.entrySet().iterator();
 
-            assertTrue(iter.next().getValue() == 20, "test first value");
-            assertTrue(iter.next().getValue() == 15, "test second value");
-            assertTrue(iter.next().getValue() == 15, "test third value");
-            assertTrue(iter.next().getValue() == 10, "test last value");
+			assertTrue(iter.next().getValue() == 20, "test first value");
+			assertTrue(iter.next().getValue() == 15, "test second value");
+			assertTrue(iter.next().getValue() == 15, "test third value");
+			assertTrue(iter.next().getValue() == 10, "test last value");
 
 			assertTrue(new ScrambleWord("costarred").score() == 33, "costarred score");
 			assertTrue(new ScrambleWord("portered").score() == 27, "portered score");
@@ -326,46 +360,59 @@ public class Scramble {
 			assertTrue(new ScrambleWord("os").score() == 1, "os score");
 			assertTrue(new ScrambleWord("ox").score() == 1, "ox score");
 
-            // quick test to see if our search algo can find all permutations
-            // dummy implementation will treat all combinations as words
-            Character[][] twoByTwo = {
-                    {'a', 'b'},
-                    {'c', 'd'},
-            };
+			// quick test to see if our search algo can find all permutations
+			// dummy implementation will treat all combinations as words
+			Character[][] twoByTwo = {
+					{'a', 'b'},
+					{'c', 'd'},
+			};
 
-            Scramble scramble = new Scramble(twoByTwo, new PrefixDictionary() {
-                public boolean hasPrefix(String s1) {
-                    return true;
-                }
+			Scramble scramble = new Scramble(twoByTwo, new PrefixDictionary() {
+				public boolean hasPrefix(String s1) {
+					return true;
+				}
 
-                public boolean hasWord(String s1) {
-                    return true;
-                }
+				public boolean hasWord(String s1) {
+					return true;
+				}
 
-                public void init() {
-                }
-            });
+				public void init() {
+				}
+			});
 
             Set<String> words = scramble.findScrambleWords();
 			assertTrue(words.size() == findWordPermutations(4), "dummy prefix impl should find: " +
                     findWordPermutations(4) + " word permutations for a 2x2 char board");
 
-            Scramble theScramble = new Scramble(testScrambleBoard, new SimplePrefixDictionary("./resources/words.txt"));
+			Scramble theScramble = null;
+            theScramble = new Scramble(testScrambleBoard, new SimplePrefixDictionary("./resources/words.txt"));
             testPrefixDictionaryImplementation(theScramble, "SimplePrefixDictionary");
-
+//
             theScramble = new Scramble(testScrambleBoard, new TriePrefixDictionary("./resources/words.txt"));
             testPrefixDictionaryImplementation(theScramble, "TriePrefixDictionary");
 
-            theScramble = new Scramble("lenonsimstasergv", new TriePrefixDictionary("./resources/words.txt"));
-            testPrefixDictionaryImplementation(theScramble, "TriePrefixDictionary (string constructor)");
+			theScramble = new Scramble("lenonsimstasergv", new TriePrefixDictionary("./resources/words.txt"));
+			testPrefixDictionaryImplementation(theScramble, "TriePrefixDictionary (string constructor)");
 //
             theScramble = new Scramble(testScrambleBoardWithQs, new SimplePrefixDictionary("./resources/words.txt"));
             theScramble.init();
             Set<String> qWords = theScramble.findScrambleWords();
-			System.err.println("qwords; " + qWords);
 			assertTrue(qWords.contains("quit"), "should find quit");
 
-            summary();
+			theScramble = new Scramble("takjls3!e3!iaee3!xfr3*td", new TriePrefixDictionary("./resources/words.txt"));
+			theScramble.init();
+			TreeMap<String,Integer> pm  = theScramble.getWordsByHighestScoring();
+			Map.Entry<String,Integer> e = pm.firstEntry();
+			assertTrue(e.getKey().equals("dextral"), "'dextral' is highest value word");
+			assertTrue(e.getValue().equals(106), "'106' is highest score");
+
+//			assertTrue(329 == pm.size(), "solution map with multipliers");
+			assertTrue(93 == pm.get("extras"), "'extras' in multiplier puzzle");
+//			System.err.println("pm.get(extras): " + pm.get("extras"));
+//			assertTrue(87 == pm.get("extra"), "'extra' in multiplier puzzle");
+			assertTrue(pm.entrySet().iterator().next().getKey().equals("dextral"), "highest value in map");
+			summary();
+
 
 //			System.err.println("16 char board (4x4) has " + findWordPermutations(16) + " possible permutations");
 		}
@@ -424,7 +471,7 @@ public class Scramble {
 
         }
 
-        public static void assertTrue(boolean expression, String s) {
+		public static void assertTrue(boolean expression, String s) {
             count++;
             if (!expression) {
                 System.err.println("FAILED: " + s);

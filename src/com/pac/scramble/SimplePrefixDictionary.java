@@ -44,7 +44,7 @@ implements PrefixDictionary{
             file.close();
         }
         Collections.sort(dictionary);
-        System.err.println(dictionary.size() + " words loaded in dictionary");
+//        System.err.println(dictionary.size() + " words loaded in dictionary");
 
     }
 

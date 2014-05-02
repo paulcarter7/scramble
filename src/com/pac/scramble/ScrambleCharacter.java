@@ -25,7 +25,7 @@ public class ScrambleCharacter {
 	}
 
 	public String toString() {
-		return new String(scrambleEnum.toString() + "(" + row + "," + col + "):" + scrambleEnum.value);
+		return scrambleEnum.toString() + "(" + row + "," + col + "), (lmult=" + letterMultiplier + ", wordmult=" + wordMultiplier + ")";
 	}
 
 	public String getString() {
@@ -33,6 +33,14 @@ public class ScrambleCharacter {
 	}
 	public int getWordMultiplier() {
 		return wordMultiplier;
+	}
+
+	public void setWordMultiplier(int multiplier) {
+		this.wordMultiplier = multiplier;
+	}
+
+	public void setLetterMultiplier(int multiplier) {
+		this.letterMultiplier = multiplier;
 	}
 
 	@Override
