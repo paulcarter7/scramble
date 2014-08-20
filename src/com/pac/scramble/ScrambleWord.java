@@ -37,10 +37,16 @@ public class ScrambleWord {
 		for (ScrambleCharacter letter : letters) {
 			score += letter.score();
 		}
+        score = score * wordMultiplier;
 
-		score = score * wordMultiplier;
+		// Qu just counts as 1 letter
+		int adjustedLength = word.length();
 
-		switch (word.length()) {
+		if (word.toString().contains("q")) {
+			adjustedLength= adjustedLength - 1;
+		}
+
+        switch (adjustedLength) {
 
 			case 1:
 				throw new RuntimeException("can't have 1 letter words: " + word);
@@ -68,20 +74,28 @@ public class ScrambleWord {
 			case 10:
 				score += 25;
 				break;
+			case 11:
+				score += 25;
+				break;
 			default:
                 throw new RuntimeException("this word (" + word + ") is too long: " + word.length() + "; I only know" +
-                        " how to score words up to 10 letters long");
+                        " how to score words up to 11 letters long");
 
 		}
 
-		return score;
+        return score;
 	}
 
 	public void addLetter(ScrambleCharacter character) {
-		if (character.getWordMultiplier() > wordMultiplier) {
-			wordMultiplier = character.getWordMultiplier();
-		}
-		assert !letters.contains(character);
+		if (character.getWordMultiplier() != 1) {
+            if (wordMultiplier != 1) {
+                wordMultiplier += character.getWordMultiplier();
+            }
+            else {
+                wordMultiplier = character.getWordMultiplier();
+            }
+        }
+        assert !letters.contains(character);
 
 		letters.add(character);
 		word.append(character.getString());
@@ -90,4 +104,5 @@ public class ScrambleWord {
 	public String getWord() {
 		return word.toString();
 	}
+
 }
