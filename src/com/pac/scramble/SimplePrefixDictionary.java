@@ -32,16 +32,11 @@ implements PrefixDictionary{
     public void init()
     throws Exception {
 
-        BufferedReader file = null;
-        try {
-            file = new BufferedReader(new FileReader(wordFile));
-            String word = null;
+        try (BufferedReader file = new BufferedReader(new FileReader(wordFile))) {
+            String word;
             while ((word = file.readLine()) != null) {
                 dictionary.add(word);
             }
-        }
-        finally {
-            file.close();
         }
         Collections.sort(dictionary);
 //        System.err.println(dictionary.size() + " words loaded in dictionary");
