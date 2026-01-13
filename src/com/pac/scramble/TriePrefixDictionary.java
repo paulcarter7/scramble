@@ -4,6 +4,7 @@ import com.pac.trie.Trie;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Created with IntelliJ IDEA.
@@ -28,7 +29,7 @@ public class TriePrefixDictionary
     public void init()
     throws Exception {
 
-        try (BufferedReader file = new BufferedReader(new FileReader(wordFile))) {
+        try (BufferedReader file = new BufferedReader(new FileReader(wordFile, StandardCharsets.UTF_8))) {
             String word;
             while ((word = file.readLine()) != null) {
                 trie.insertWord(word);

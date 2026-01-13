@@ -3,6 +3,7 @@ package com.pac.scramble;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 /**
@@ -32,7 +33,7 @@ implements PrefixDictionary{
     public void init()
     throws Exception {
 
-        try (BufferedReader file = new BufferedReader(new FileReader(wordFile))) {
+        try (BufferedReader file = new BufferedReader(new FileReader(wordFile, StandardCharsets.UTF_8))) {
             String word;
             while ((word = file.readLine()) != null) {
                 dictionary.add(word);
