@@ -87,6 +87,12 @@ public class ScrambleWord {
 	}
 
 	public void addLetter(ScrambleCharacter character) {
+		if (character == null) {
+			throw new IllegalArgumentException("Character cannot be null");
+		}
+		if (letters.contains(character)) {
+			throw new IllegalArgumentException("Character already added to word: " + character);
+		}
 		if (character.getWordMultiplier() != 1) {
             if (wordMultiplier != 1) {
                 wordMultiplier += character.getWordMultiplier();
@@ -95,7 +101,6 @@ public class ScrambleWord {
                 wordMultiplier = character.getWordMultiplier();
             }
         }
-        assert !letters.contains(character);
 
 		letters.add(character);
 		word.append(character.getString());

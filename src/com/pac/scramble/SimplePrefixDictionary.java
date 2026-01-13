@@ -53,18 +53,4 @@ implements PrefixDictionary{
     public boolean hasWord(String word) {
         return Collections.binarySearch(dictionary, word)>=0;
     }
-
-    public static class PrefixComparator
-    implements Comparator<String> {
-
-        public int compare(String word, String prefix) {
-//            System.err.println("prefix: \"" + prefix + "\"; word: \"" + word + "\"");
-            if(word.startsWith(prefix)) {
-                return 0;
-            }
-            else {
-                return word.compareTo(prefix);
-            }
-        }
-    }
 }
