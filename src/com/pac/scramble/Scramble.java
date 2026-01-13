@@ -67,7 +67,7 @@ public class Scramble {
     }
 
 	public Map<String,Integer> getWordsByAlpha() {
-		return wordMap;
+		return Collections.unmodifiableMap(wordMap);
 	}
 
 	public TreeMap<String,Integer> getWordsByHighestScoring() {
@@ -156,7 +156,7 @@ public class Scramble {
             }
         }
 
-        return words;
+        return Collections.unmodifiableSet(words);
     }
 
     /**
