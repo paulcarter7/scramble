@@ -173,4 +173,50 @@ class TrieTest {
             assertFalse(trie.hasPrefix("ba"));
         }
     }
+
+    @Nested
+    @DisplayName("Input Validation Tests")
+    class InputValidationTests {
+
+        @Test
+        @DisplayName("insertWord should reject uppercase letters")
+        void testInsertWordRejectsUppercase() {
+            Trie t = new Trie();
+            assertThrows(IllegalArgumentException.class, () -> t.insertWord("Hello"));
+        }
+
+        @Test
+        @DisplayName("insertWord should reject digits")
+        void testInsertWordRejectsDigits() {
+            Trie t = new Trie();
+            assertThrows(IllegalArgumentException.class, () -> t.insertWord("test123"));
+        }
+
+        @Test
+        @DisplayName("insertWord should reject special characters")
+        void testInsertWordRejectsSpecialChars() {
+            Trie t = new Trie();
+            assertThrows(IllegalArgumentException.class, () -> t.insertWord("hello!"));
+        }
+
+        @Test
+        @DisplayName("findWord should reject uppercase letters")
+        void testFindWordRejectsUppercase() {
+            assertThrows(IllegalArgumentException.class, () -> trie.findWord("BLAH"));
+        }
+
+        @Test
+        @DisplayName("hasPrefix should reject uppercase letters")
+        void testHasPrefixRejectsUppercase() {
+            assertThrows(IllegalArgumentException.class, () -> trie.hasPrefix("BL"));
+        }
+
+        @Test
+        @DisplayName("Should accept valid lowercase words")
+        void testAcceptsValidLowercase() {
+            Trie t = new Trie();
+            assertDoesNotThrow(() -> t.insertWord("valid"));
+            assertTrue(t.findWord("valid"));
+        }
+    }
 }

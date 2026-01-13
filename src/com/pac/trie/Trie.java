@@ -14,10 +14,18 @@ public class Trie {
     public static int OFFSET = 97; // normalize from 'a' to zero based array index of 0
     private TrieNode root = new TrieNode('0'); // special case, sentinel value
 
+    private void validateChar(char c) {
+        if (c < 'a' || c > 'z') {
+            throw new IllegalArgumentException(
+                "Trie only supports lowercase letters a-z, got: '" + c + "' (ASCII " + (int)c + ")");
+        }
+    }
+
     public void insertWord(String word) {
         char[] letters = word.toCharArray();
         TrieNode current = root;
         for (int i = 0; i < letters.length; i++) {
+            validateChar(letters[i]);
             if (current.nodes[letters[i] - OFFSET] == null) {
                 current.nodes[letters[i] - OFFSET] = new TrieNode((letters[i]));
             }
@@ -44,6 +52,7 @@ public class Trie {
             if (current == null) {
                 return null;
             }
+            validateChar(prefix.charAt(i));
             current = current.nodes[prefix.charAt(i) - OFFSET];
         }
         return current;
