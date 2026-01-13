@@ -505,5 +505,33 @@ class ScrambleTest {
 
             assertEquals(39, word.score(), "11 letter word score: " + word.getWord());
         }
+
+        @Test
+        @DisplayName("Board with multiplier notation should parse and score correctly")
+        void testBoardWithMultiplierNotation() throws Exception {
+            // Board: takjls3!e3!iaee3!xfr3*td
+            // 3!e = 3x letter multiplier on 'e'
+            // 3!i = 3x letter multiplier on 'i'
+            // 3!x = 3x letter multiplier on 'x'
+            // 3*t = 3x word multiplier on 't'
+            Scramble scramble = new Scramble("takjls3!e3!iaee3!xfr3*td",
+                    new TriePrefixDictionary("./resources/words.txt"));
+            scramble.init();
+
+            Set<String> words = scramble.findScrambleWords();
+            TreeMap<String, Integer> scores = scramble.getWordsByHighestScoring();
+
+            // Verify word count
+            assertEquals(339, words.size(), "should find 339 words");
+
+            // Verify highest scoring word
+            Map.Entry<String, Integer> highest = scores.firstEntry();
+            assertEquals("dextral", highest.getKey(), "highest scoring word should be 'dextral'");
+            assertEquals(106, highest.getValue(), "dextral should score 106");
+
+            // Verify specific words with multipliers find optimal paths
+            assertEquals(99, scores.get("extras"), "extras should score 99 (optimal path uses 3x letter 'e')");
+            assertEquals(93, scores.get("extra"), "extra should score 93 (optimal path uses 3x letter 'e')");
+        }
     }
 }
