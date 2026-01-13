@@ -62,20 +62,23 @@ public class Trie {
     private List<String> findWordsWithPrefix(String prefix) {
         TrieNode current = goToNode(prefix);
         List<String> words = new ArrayList<String>();
-        recurseTrieNodes(prefix, words, current);
+        StringBuilder sb = new StringBuilder(prefix);
+        recurseTrieNodes(sb, words, current);
 
         return words;
     }
 
-    private void recurseTrieNodes(String prefix, List<String> words, TrieNode current) {
+    private void recurseTrieNodes(StringBuilder prefix, List<String> words, TrieNode current) {
 
         if (current.isFullWord) {
-            words.add(prefix);
+            words.add(prefix.toString());
         }
         TrieNode[] nodes = current.nodes;
         for (TrieNode node : nodes) {
             if (node != null) {
-                recurseTrieNodes(prefix + node.letter, words, node);
+                prefix.append(node.letter);
+                recurseTrieNodes(prefix, words, node);
+                prefix.deleteCharAt(prefix.length() - 1);
             }
         }
     }
