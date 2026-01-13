@@ -47,4 +47,7 @@ Use `!` for letter multipliers and `*` for word multipliers (e.g., `3!e` for 3x 
 
 ---
 
-*This project was dusted off and modernized through vibe coding with [Claude Code](https://claude.ai/claude-code) - because refactoring legacy Java on a lazy afternoon is way more fun with an AI pair programmer who never judges your decade-old commit messages.*
+*This project was dusted off and modernized through vibe coding with
+[Claude Code](https://claude.ai/claude-code) - because refactoring legacy Java
+on a lazy afternoon is way more fun with an AI pair programmer who never
+judges your decade-old commit messages.*
