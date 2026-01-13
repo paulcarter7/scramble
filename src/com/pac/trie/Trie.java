@@ -11,7 +11,7 @@ import java.util.List;
  */
 public class Trie {
 
-    public static int OFFSET = 97; // normalize from 'a' to zero based array index of 0
+    public static final int OFFSET = 97; // normalize from 'a' to zero based array index of 0
     private TrieNode root = new TrieNode('0'); // special case, sentinel value
 
     private void validateChar(char c) {
